@@ -54,6 +54,7 @@ export const OperationsFragment = graphql(/* GraphQL */ `
         description
         externalValue
         value
+        hasValue
         summary
       }
     }
@@ -138,6 +139,23 @@ export const OperationsFragment = graphql(/* GraphQL */ `
           name
         }
         schema
+      }
+      headers {
+        name
+        description
+        required
+        deprecated
+        style
+        explode
+        schema
+        examples {
+          name
+          description
+          externalValue
+          value
+          hasValue
+          summary
+        }
       }
     }
   }

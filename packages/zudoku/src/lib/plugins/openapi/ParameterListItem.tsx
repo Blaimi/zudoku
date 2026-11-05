@@ -19,7 +19,15 @@ import {
   unwrapNullableUnion,
 } from "./schema/utils.js";
 
-const getParameterSchema = (parameter: ParameterItem): SchemaObject => {
+// Structural subset of a parameter so that parameter-like items (e.g. response
+// headers) can be rendered the same way.
+export type ParameterListItemData = Pick<
+  ParameterItem,
+  "name" | "description" | "required" | "schema"
+> &
+  Partial<Pick<ParameterItem, "style" | "explode" | "examples">>;
+
+const getParameterSchema = (parameter: ParameterListItemData): SchemaObject => {
   if (parameter.schema != null && typeof parameter.schema === "object") {
     return parameter.schema;
   }
@@ -33,7 +41,7 @@ export const ParameterListItem = ({
   group,
   id,
 }: {
-  parameter: ParameterItem;
+  parameter: ParameterListItemData;
   group: ParameterGroup;
   id: string;
 }) => {
@@ -41,6 +49,15 @@ export const ParameterListItem = ({
     getParameterSchema(parameter),
   );
   const [isOpen, setIsOpen] = useState(false);
+
+  // Parameter-level examples take precedence over the schema's examples
+  const parameterExamples = (parameter.examples ?? []).flatMap((example) =>
+    example.hasValue ? [example.value] : [],
+  );
+  const exampleSchema =
+    parameterExamples.length > 0
+      ? { ...paramSchema, examples: parameterExamples }
+      : paramSchema;
 
   const isCollapsible =
     paramSchema.type === "object" ||
@@ -53,7 +70,7 @@ export const ParameterListItem = ({
     paramSchema.description ||
     (paramSchema.type === "array" && paramSchema.items?.enum) ||
     paramSchema.enum ||
-    paramSchema.example !== undefined ||
+    (exampleSchema.examples?.length ?? 0) > 0 ||
     paramSchema.default !== undefined,
   );
 
@@ -134,7 +151,7 @@ export const ParameterListItem = ({
                 />
               )
             )}
-            <SchemaExampleAndDefault schema={paramSchema} />
+            <SchemaExampleAndDefault schema={exampleSchema} />
           </div>
         )}
       </ItemContent>
