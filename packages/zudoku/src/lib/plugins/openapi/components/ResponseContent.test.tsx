@@ -67,4 +67,66 @@ describe("ResponseContent", () => {
     expect(screen.getByRole("heading", { name: /^Body/ })).toBeInTheDocument();
     expect(screen.getByText("No data returned")).toBeInTheDocument();
   });
+
+  it("shows header-level examples", () => {
+    render(
+      <ResponseContent
+        id="update-cargo"
+        selectedResponse="200"
+        responses={[
+          {
+            statusCode: "200",
+            headers: [
+              {
+                ...header("ETag", { type: "string" }),
+                examples: [
+                  {
+                    name: "default",
+                    value: "qe-7f3a9c",
+                    hasValue: true,
+                    summary: null,
+                    description: null,
+                    externalValue: null,
+                  },
+                ],
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("qe-7f3a9c")).toBeInTheDocument();
+  });
+
+  it("keeps the status tabs and headers for a const body schema", () => {
+    render(
+      <ResponseContent
+        id="update-cargo"
+        selectedResponse="200"
+        responses={[
+          {
+            statusCode: "200",
+            content: [
+              {
+                mediaType: "application/json",
+                schema: { type: "string", const: "DOCKED" },
+                examples: [],
+              },
+            ],
+            headers: [header("ETag", { type: "string" })],
+          },
+          { statusCode: "404", headers: [] },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: "404" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /^Headers/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("ETag")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /^Body/ })).toBeInTheDocument();
+    expect(screen.getByText("DOCKED")).toBeInTheDocument();
+  });
 });
